@@ -29,6 +29,7 @@ const run = (code = '', options = {}) => {
     on.exit && events.on('end', on.exit);
 
     const { activeHandlers } = context._execution;
+    activeHandlers.increment();
     activeHandlers.onEmptyPromise
         .then(() => events.emit('end'))
         .catch(() => events.emit('end'))
@@ -46,7 +47,6 @@ const run = (code = '', options = {}) => {
     ${es2015 ? toES2015(prepare(code, { sync })) : prepare(code, { sync })}
     `;
 
-    activeHandlers.increment();
     events.emit('start');
 
     if (sync) {

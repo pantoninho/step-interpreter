@@ -52,10 +52,10 @@ describe('interpreter', function () {
           `;
 
             const execution = run(code);
-            const { promises } = execution;
-            const { executionEnd } = promises;
-            await expect(execution).to.eventually.be.fulfilled;
+            await execution;
+            const { executionEnd } = execution.promises;
             execution.emit('dispose');
+            await expect(execution).to.eventually.be.fulfilled;
             await expect(executionEnd).to.eventually.be.fulfilled;
         });
 

@@ -83,6 +83,10 @@ function handlerCounter(onEmpty = () => {}) {
             count = 0;
         },
         get onEmptyPromise() {
+            if (count === 0) {
+                return Promise.resolve();
+            }
+
             return new Promise((resolve, reject) => {
                 onEmptyResolvers.push(resolve);
                 onEmptyRejecters.push(reject);
