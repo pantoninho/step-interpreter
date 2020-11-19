@@ -8,7 +8,7 @@ const Stepper = require('./stepper');
 
 const run = (code = '', options = {}) => {
     const {
-        stepTime = 15,
+        stepTime,
         on = {},
         context: userContext = {},
         es2015 = false,

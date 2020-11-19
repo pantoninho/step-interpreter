@@ -2,7 +2,7 @@ const EventEmitter = require('./event-emitter');
 
 class Stepper {
     constructor(options = {}) {
-        const { stepTime = 100 } = options;
+        const { stepTime = 1 } = options;
 
         this.events = EventEmitter();
         this.stepTime = stepTime;
