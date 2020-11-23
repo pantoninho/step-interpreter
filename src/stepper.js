@@ -1,47 +1,47 @@
 const EventEmitter = require('./event-emitter');
 
 class Stepper {
-    constructor(options = {}) {
-        const { stepTime = 100 } = options;
-
+    constructor() {
         this.events = EventEmitter();
-        this.stepTime = stepTime;
     }
 
-    async step(expr) {
+    async step(ms = false) {
         if (this.destroyed) {
             throw 'stepper-destroyed';
         }
 
-        this.events.emit('step', expr);
-        this.currentStep = wait(this.stepTime);
+        this.events.emit('step');
+
+        if (!this.paused && ms === false) {
+            return;
+        }
+
+        this.currentStep = wait(ms);
 
         try {
             await this.currentStep;
-
-            if (this.pausePromise) {
-                await this.pausePromise;
-            }
         } catch (err) {
             throw 'stepper-destroyed';
         }
     }
 
-    async pause() {
-        if (this.pausePromise) {
+    pause() {
+        if (this.paused) {
             return;
         }
 
-        this.pausePromise = wait();
+        this.paused = true;
     }
 
-    async resume() {
-        if (!this.pausePromise) {
+    resume() {
+        if (!this.paused) {
             return;
         }
 
-        this.pausePromise.resolve();
-        this.pausePromise = null;
+        this.paused = false;
+        if (this.currentStep) {
+            this.currentStep.resolve();
+        }
     }
 
     on(event, handler) {
@@ -56,20 +56,13 @@ class Stepper {
         return this.events.once(event, handler);
     }
 
-    setStepTime(stepTime) {
-        this.stepTime = stepTime;
-    }
-
     async destroy() {
         this.events.destroy();
         this.destroyed = true;
+        this.paused = false;
 
         if (this.currentStep) {
             this.currentStep.cancel();
-        }
-
-        if (this.pausePromise) {
-            this.pausePromise.cancel();
         }
     }
 }
@@ -85,12 +78,26 @@ function wait(ms = false) {
         resolver = resolve;
 
         if (ms !== false) {
-            setTimeout(resolve, ms);
+            setTimeout(() => promise.resolve(), ms);
         }
     });
 
-    promise.cancel = () => rejector('destroyed');
-    promise.resolve = () => resolver();
+    const destroy = () => {
+        rejector = null;
+        resolver = null;
+    };
+    promise.cancel = () => {
+        if (rejector) {
+            rejector('destroyed');
+        }
+        destroy();
+    };
+    promise.resolve = () => {
+        if (resolver) {
+            resolver();
+        }
+        destroy();
+    };
 
     return promise;
 }
