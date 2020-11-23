@@ -63,27 +63,27 @@ describe('code-transforms', function () {
     describe('step injection', function () {
         it('should inject steps before declarations', function () {
             const input = `const a = 1;`;
-            const step = 'await step(`const a = 1;`);';
+            const step = 'await step();';
             expect(prepare(input)).to.include(step);
         });
         it('should inject steps before declarations inside functions', function () {
             const input = `function test() { const a = 1; }`;
-            const step = 'await step(`const a = 1;`);';
+            const step = 'await step();';
             expect(prepare(input)).to.include(step);
         });
         it('should inject steps before declarations inside for loops', function () {
             const input = `for(let i = 0; i < 1; i++) { const a = 1; }`;
-            const step = 'await step(`const a = 1;`);';
+            const step = 'await step();';
             expect(prepare(input)).to.include(step);
         });
         it('should inject steps before declarations inside while loops', function () {
             const input = `while(true) { const a = 1; }`;
-            const step = 'await step(`const a = 1;`);';
+            const step = 'await step();';
             expect(prepare(input)).to.include(step);
         });
-        it('should inject step call with the next block code as argument (without that block steps)', function () {
+        it('should inject multiple steps', function () {
             const input = `while (true) { console.log('hey!'); }`;
-            const output = /await step\(`while \(true\) {\s+console\.log\('hey!'\);\s+}`\)/s;
+            const output = /await step\(\)/s;
             expect(prepare(input)).to.match(output);
         });
         it('should inject step calls inside anonymous callback functions', async function () {
@@ -93,7 +93,7 @@ describe('code-transforms', function () {
                 console.log(element);
             });
             `;
-            const step = 'await step(`console.log(element);`)';
+            const step = 'await step()';
             expect(prepare(input)).to.include(step);
         });
         it('should inject step calls inside arrow functions with body', async function () {
@@ -105,8 +105,8 @@ describe('code-transforms', function () {
             });
             `;
 
-            const step1 = 'await step(`console.log(element);`)';
-            const step2 = 'await step(`return element + 1;`)';
+            const step1 = 'await step()';
+            const step2 = 'await step()';
             expect(prepare(input)).to.include(step1);
             expect(prepare(input)).to.include(step2);
         });
@@ -116,7 +116,7 @@ describe('code-transforms', function () {
             const b = a.map(element => element + 1);
             `;
 
-            const step = 'await step(`element + 1`);';
+            const step = 'await step();';
             expect(prepare(input)).to.include(step);
         });
         it('should inject step calls inside with blocks', async function () {
@@ -126,7 +126,7 @@ describe('code-transforms', function () {
             }
             `;
 
-            const step = 'await step(`const a = [1, 2];`);';
+            const step = 'await step();';
             expect(prepare(input)).to.include(step);
         });
     });

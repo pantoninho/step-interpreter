@@ -23,7 +23,6 @@ const createContext = ({ events, userContext, stepper }) => {
             },
             pause: () => stepper.pause(),
             resume: () => stepper.resume(),
-            setStepTime: (ms) => stepper.setStepTime(ms),
             activeHandlers
         },
         ...userContext

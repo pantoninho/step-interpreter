@@ -8,7 +8,6 @@ const Stepper = require('./stepper');
 
 const run = (code = '', options = {}) => {
     const {
-        stepTime = 15,
         on = {},
         context: userContext = {},
         es2015 = false,
@@ -17,7 +16,7 @@ const run = (code = '', options = {}) => {
     } = options;
     const events = EventEmitter();
 
-    const stepper = new Stepper({ stepTime });
+    const stepper = new Stepper();
     const context = createContext({ events, userContext, stepper });
     const vm = new VM(context);
 
