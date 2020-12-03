@@ -101,10 +101,12 @@ describe('interpreter', function () {
             const execution = run(code);
             const { promises } = execution;
             const { executionEnd } = promises;
-            setTimeout(() => execution.pause(), 10);
-            setTimeout(() => execution.resume(), 200);
-            await expect(execution).to.eventually.be.fulfilled;
-            await expect(executionEnd).to.eventually.be.fulfilled;
+
+            execution.pause();
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            expect(execution).to.not.be.fulfilled;
+            expect(executionEnd).to.not.be.fulfilled;
         });
 
         it('run() should pipe ReferenceErrors in code through both promises', async function () {
