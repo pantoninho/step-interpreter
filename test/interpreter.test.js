@@ -36,7 +36,6 @@ describe('interpreter', function () {
                 'stop',
                 'resume',
                 'promises',
-                'setStepTime',
                 'on',
                 'emit',
                 'once',
@@ -62,6 +61,7 @@ describe('interpreter', function () {
         it('run() promises should be fulfilled when user stops execution', async function () {
             const code = `
             while(true) {
+                step(1);
                 const a = 1;
             }
         `;
@@ -101,7 +101,7 @@ describe('interpreter', function () {
             const execution = run(code);
             const { promises } = execution;
             const { executionEnd } = promises;
-            setTimeout(() => execution.pause(), 10);
+            execution.pause();
             setTimeout(() => execution.resume(), 200);
             await expect(execution).to.eventually.be.fulfilled;
             await expect(executionEnd).to.eventually.be.fulfilled;
@@ -152,9 +152,9 @@ describe('interpreter', function () {
             expect(callback).to.have.been.callCount(5);
         });
 
-        it('should be protected against infinite while loops', async function () {
+        it('should be protected against infinite while loops with explicit step', async function () {
             const code = `
-            while(true) {}
+            while(true) { step(1); }
         `;
 
             const execution = run(code);
@@ -162,32 +162,14 @@ describe('interpreter', function () {
             await expect(execution).to.eventually.be.fulfilled;
         });
 
-        it('should be protected against infinite for loops', async function () {
+        it('should be protected against infinite for loops with explicit step', async function () {
             const code = `
-            for (;;) {}
+            for (;;) { step(1); }
         `;
 
             const execution = run(code);
             setTimeout(() => execution.stop(), 200);
             await expect(execution).to.eventually.be.fulfilled;
-        });
-
-        it('should be able to control step time while running', async function () {
-            const INITIAL_STEP_TIME = 100;
-
-            const code = `
-            for (let i = 0; i < 2; i++) {
-                const a = 1;
-            }
-        `;
-
-            const before = performance.now();
-            const execution = run(code, { stepTime: INITIAL_STEP_TIME });
-            setTimeout(() => execution.setStepTime(1), 10);
-            await expect(execution).to.eventually.be.fulfilled;
-            const after = performance.now();
-
-            expect(before - after).to.be.lessThan(INITIAL_STEP_TIME * 2);
         });
 
         it('should be able to execute code in parallel', async function () {
@@ -280,12 +262,12 @@ describe('interpreter', function () {
             await run(code, { on: { start: callback } });
             expect(callback).to.have.been.called;
         });
-        it('should fire on.step event with next expression', async function () {
+        it('should fire on.step event', async function () {
             const callback = sinon.fake();
             const code = `const firstStep = 1;`;
 
             await run(code, { on: { step: callback } });
-            expect(callback).to.have.been.calledWith('const firstStep = 1;');
+            expect(callback).to.have.been.called;
         });
         it('should call on.step event 2 times', async function () {
             const callback = sinon.fake();

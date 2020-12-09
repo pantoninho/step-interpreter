@@ -1,20 +1,17 @@
 const EventEmitter = require('./event-emitter');
 
 class Stepper {
-    constructor(options = {}) {
-        const { stepTime = 100 } = options;
-
+    constructor() {
         this.events = EventEmitter();
-        this.stepTime = stepTime;
     }
 
-    async step(expr) {
+    async step(ms) {
         if (this.destroyed) {
             throw 'stepper-destroyed';
         }
 
-        this.events.emit('step', expr);
-        this.currentStep = wait(this.stepTime);
+        this.events.emit('step');
+        this.currentStep = wait(ms);
 
         try {
             await this.currentStep;
@@ -32,7 +29,7 @@ class Stepper {
             return;
         }
 
-        this.pausePromise = wait();
+        this.pausePromise = wait(Infinity);
     }
 
     async resume() {
@@ -56,10 +53,6 @@ class Stepper {
         return this.events.once(event, handler);
     }
 
-    setStepTime(stepTime) {
-        this.stepTime = stepTime;
-    }
-
     async destroy() {
         this.events.destroy();
         this.destroyed = true;
@@ -76,7 +69,11 @@ class Stepper {
 
 module.exports = Stepper;
 
-function wait(ms = false) {
+function wait(ms) {
+    if (!ms) {
+        return;
+    }
+
     let rejector;
     let resolver;
 
@@ -84,13 +81,27 @@ function wait(ms = false) {
         rejector = reject;
         resolver = resolve;
 
-        if (ms !== false) {
-            setTimeout(resolve, ms);
+        if (ms !== Infinity) {
+            setTimeout(() => promise.resolve(), ms);
         }
     });
 
-    promise.cancel = () => rejector('destroyed');
-    promise.resolve = () => resolver();
+    const destroy = () => {
+        rejector = null;
+        resolver = null;
+    };
+    promise.cancel = () => {
+        if (rejector) {
+            rejector('destroyed');
+        }
+        destroy();
+    };
+    promise.resolve = () => {
+        if (resolver) {
+            resolver();
+        }
+        destroy();
+    };
 
     return promise;
 }

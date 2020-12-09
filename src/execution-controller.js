@@ -4,7 +4,6 @@ const createExecutionController = ({ execution, events, context }) => {
         stop,
         pause,
         resume,
-        setStepTime
     } = context._execution;
 
     const controller = {
@@ -15,7 +14,6 @@ const createExecutionController = ({ execution, events, context }) => {
         stop,
         pause,
         resume,
-        setStepTime,
         context,
         promises: {
             get executionEnd() {

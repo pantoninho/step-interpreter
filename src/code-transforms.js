@@ -1,5 +1,4 @@
 const Babel = require('@babel/standalone');
-const generate = require('@babel/generator');
 
 exports.toES2015 = toES2015;
 exports.prepare = prepare;
@@ -68,8 +67,7 @@ function stepInjector(babel) {
                     path.node.body = t.blockStatement([
                         createContextCall(
                             babel,
-                            'step',
-                            generate.default(path.node).code
+                            'step'
                         )
                     ]);
                     path.skip();
@@ -116,22 +114,19 @@ function stepInjector(babel) {
     };
 }
 
-function createContextCall(babel, fnName, expr) {
+function createContextCall(babel, fnName) {
     const { types: t } = babel;
 
     const stepperName = t.identifier(fnName);
-    const stepperArgs = [
-        t.templateLiteral([t.templateElement({ raw: expr })], [])
-    ];
 
     return t.expressionStatement(
-        t.awaitExpression(t.callExpression(stepperName, stepperArgs))
+        t.awaitExpression(t.callExpression(stepperName, []))
     );
 }
 
 function prependContextCall(babel, path) {
     return path.insertBefore(
-        createContextCall(babel, 'step', generate.default(path.node).code)
+        createContextCall(babel, 'step')
     );
 }
 
@@ -146,8 +141,7 @@ function implicitToExplicitReturnFunction(babel, path) {
 
     const stepCall = createContextCall(
         babel,
-        'step',
-        generate.default(path.node.body).code
+        'step'
     );
     const returnStatement = t.returnStatement(path.node.body);
     const body = t.blockStatement([stepCall, returnStatement]);
